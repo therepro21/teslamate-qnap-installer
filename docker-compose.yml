@@ -1,0 +1,33 @@
+name: teslamate-qnap-installer
+services:
+  manager:
+    image: ghcr.io/therepro21/teslamate-qnap-installer:1
+    container_name: teslamate-qnap-manager
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - teslamate-qnap-manager-config:/data
+      - teslamate-qnap-backups:/backups
+    environment:
+      MANAGER_SESSION_KEY: "qnap-local-session-change-on-recreate"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8888/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    labels:
+      io.teslamate-qnap.managed: "true"
+      io.teslamate-qnap.warning: "Docker socket grants host-level Docker control; LAN only"
+volumes:
+  teslamate-qnap-manager-config:
+    name: teslamate-qnap-manager-config
+    labels:
+      io.teslamate-qnap.persistent: "true"
+      io.teslamate-qnap.never-delete: "true"
+  teslamate-qnap-backups:
+    name: teslamate-qnap-backups
+    labels:
+      io.teslamate-qnap.persistent: "true"
+      io.teslamate-qnap.never-delete: "true"
