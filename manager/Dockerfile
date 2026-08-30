@@ -3,7 +3,8 @@ WORKDIR /app
 RUN addgroup -S app && adduser -S -G app app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY app.py templates/ ./
+COPY app.py ./
+COPY templates/ ./templates/
 RUN mkdir -p /data /backups
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 EXPOSE 8888
