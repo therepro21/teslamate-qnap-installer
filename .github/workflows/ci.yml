@@ -69,3 +69,7 @@ jobs:
             org.opencontainers.image.licenses=MIT
           provenance: mode=max
           sbom: true
+      - name: Make GHCR package public
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api --method PATCH "/user/packages/container/teslamate-qnap-installer/visibility" -f visibility=public
