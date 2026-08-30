@@ -9,4 +9,8 @@ class StaticTests(unittest.TestCase):
     compose=(ROOT/'docker-compose.yml').read_text().lower()
     self.assertNotIn('database_password',compose)
     self.assertNotIn('encryption_key',compose)
+  def test_update_backs_up_before_recreate(self):
+    source=(ROOT/'manager'/'app.py').read_text()
+    block=source[source.index('def update():'):source.index('@app.post("/backup")')]
+    self.assertLess(block.index('backup(cfg)'),block.index('deploy(cfg,pull=True)'))
 if __name__=='__main__': unittest.main()
