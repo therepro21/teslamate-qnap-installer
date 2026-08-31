@@ -13,4 +13,19 @@ class StaticTests(unittest.TestCase):
     source=(ROOT/'manager'/'app.py').read_text()
     block=source[source.index('def update():'):source.index('@app.post("/backup")')]
     self.assertLess(block.index('backup(cfg)'),block.index('deploy(cfg,pull=True)'))
+  def test_every_configuration_field_has_bilingual_help(self):
+    html=(ROOT/'manager'/'templates'/'index.html').read_text()
+    fields=('internal_ip','domain','teslamate_port','grafana_port','timezone','teslamate_image','grafana_image','postgres_image','mosquitto_image')
+    for field in fields:
+      self.assertIn(f'id="{field}"',html)
+    self.assertEqual(html.count('class="help"'),10)
+    self.assertEqual(html.count('data-de='),10)
+    self.assertEqual(html.count('data-en='),10)
+  def test_beginner_guides_exist_in_both_languages(self):
+    de=(ROOT/'docs'/'INSTALLATION.de.md').read_text()
+    en=(ROOT/'docs'/'INSTALLATION.en.md').read_text()
+    self.assertIn('Anwendungsvorlagen',de)
+    self.assertIn('App Templates',en)
+    self.assertIn('https://raw.githubusercontent.com/',de)
+    self.assertIn('https://raw.githubusercontent.com/',en)
 if __name__=='__main__': unittest.main()

@@ -1,5 +1,9 @@
 # TeslaMate QNAP Installer
 
+**Ausführliche Anleitung für Einsteiger:** [Deutsch](docs/INSTALLATION.de.md) · [English](docs/INSTALLATION.en.md)
+
+Die beiden Anleitungen erklären jeden Klick in Container Station, jeden sichtbaren Konfigurationswert, wo er in QNAP zu finden ist und welcher Wert normalerweise richtig ist.
+
 Eine möglichst einfache, vollständig browserbasierte Installation und Verwaltung des **unveränderten** [TeslaMate](https://github.com/teslamate-org/teslamate)-Stacks auf QNAP Container Station 3.
 
 > **Inoffizielles Community-Projekt; nicht verbunden mit oder unterstützt von den jeweiligen Herstellern.** Tesla, TeslaMate und QNAP werden ausschließlich beschreibend genannt. Es werden keine fremden Logos verwendet. Nutzung ohne Gewährleistung und auf eigenes Risiko.
@@ -13,6 +17,8 @@ Eine möglichst einfache, vollständig browserbasierte Installation und Verwaltu
 - TeslaMate und Grafana nur über VPN oder einen fachgerecht gehärteten HTTPS-Reverse-Proxy ins Internet stellen.
 
 ## Installation – nur klicken
+
+Für eine bebilderungsunabhängige Schritt-für-Schritt-Erklärung mit deutschen und englischen QNAP-Menünamen siehe [INSTALLATION.de.md](docs/INSTALLATION.de.md). Die vollständige englische Fassung steht in [INSTALLATION.en.md](docs/INSTALLATION.en.md).
 
 Template-URL:
 
