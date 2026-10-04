@@ -1,13 +1,45 @@
 """QNAP-local lifecycle manager for an unmodified TeslaMate stack."""
 from __future__ import annotations
-import io, json, os, platform, secrets, tarfile, time
+import io, json, os, platform, secrets, tarfile, time, re, threading, ipaddress
+from zoneinfo import ZoneInfo
+from urllib.parse import urlsplit
 from datetime import datetime, timezone
 from pathlib import Path
-from flask import Flask, flash, redirect, render_template, request, send_from_directory, url_for
+from flask import Flask, flash, redirect, render_template, request, send_from_directory, url_for, session, abort
 import docker
 from docker.errors import DockerException, NotFound
 
 app = Flask(__name__)
+app.config.update(MAX_CONTENT_LENGTH=1024 * 1024 * 1024, SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Strict')
+OPERATIONS = threading.Lock()
+
+@app.before_request
+def protect_requests():
+    if request.method == 'POST':
+        if not secrets.compare_digest(request.form.get('_csrf', ''), session.get('_csrf', secrets.token_hex(32))):
+            abort(400, 'Formular abgelaufen / Form expired. Seite neu laden / Reload page.')
+        origin = request.headers.get('Origin')
+        if origin and urlsplit(origin).netloc != request.host:
+            abort(403)
+        if not OPERATIONS.acquire(blocking=False):
+            abort(409, 'Ein Vorgang läuft bereits / Another operation is running.')
+
+@app.teardown_request
+def release_operation(error):
+    from flask import g
+    if getattr(g, 'operation_locked', False):
+        OPERATIONS.release()
+
+@app.before_request
+def mark_operation():
+    from flask import g
+    g.operation_locked = request.method == 'POST'
+
+@app.context_processor
+def csrf_context():
+    if '_csrf' not in session:
+        session['_csrf'] = secrets.token_urlsafe(32)
+    return {'csrf_token': session['_csrf']}
 DATA = Path("/data")
 BACKUPS = Path("/backups")
 CONFIG = DATA / "config.json"
@@ -52,6 +84,48 @@ def save_config(cfg):
 def architecture():
     return SUPPORTED.get(platform.machine().lower())
 
+def validate_config(cfg, previous=None):
+    for key in ('teslamate_port', 'grafana_port'):
+        if not 1024 <= int(cfg[key]) <= 65535:
+            raise ValueError('Ports müssen zwischen 1024 und 65535 liegen / Invalid port.')
+    if int(cfg['teslamate_port']) == int(cfg['grafana_port']):
+        raise ValueError('TeslaMate und Grafana benötigen unterschiedliche Ports / Ports must differ.')
+    if cfg['internal_ip']:
+        address = ipaddress.ip_address(cfg['internal_ip'])
+        if address.version != 4 or not address.is_private:
+            raise ValueError('Eine lokale IPv4-Adresse verwenden / Use a local IPv4 address.')
+    ZoneInfo(cfg['timezone'])
+    for key, repo in (('teslamate_image','teslamate/teslamate'), ('grafana_image','teslamate/grafana'), ('postgres_image','postgres'), ('mosquitto_image','eclipse-mosquitto')):
+        if not re.fullmatch(re.escape(repo) + r':[0-9]+[A-Za-z0-9_.-]*', cfg[key]):
+            raise ValueError('Nur offizielle Images mit expliziter Versionsnummer / Only official versioned images.')
+    if previous and cfg['postgres_image'].split(':')[1].split('-')[0].split('.')[0] != previous['postgres_image'].split(':')[1].split('-')[0].split('.')[0]:
+        raise ValueError('PostgreSQL-Majorwechsel benötigt eine separate Migration / PostgreSQL major upgrade requires a separate migration.')
+
+def owned_container(d, name):
+    try:
+        c = d.containers.get(name)
+    except NotFound:
+        return None
+    if c.labels.get('io.teslamate-qnap.managed') != 'true':
+        raise RuntimeError(f'Fremder Container / Unmanaged container: {name}')
+    return c
+
+def validate_backup_archive(t):
+    expected = {'database.dump', 'config-public.json'} | {f'volumes/{key}.tar' for key in ('grafana','mosquitto-config','mosquitto-data','imports')}
+    names = []
+    for member in t.getmembers():
+        if member.name not in expected or not member.isfile():
+            raise ValueError('Ungültiges Backup / Invalid backup member.')
+        names.append(member.name)
+        if member.name.startswith('volumes/'):
+            with tarfile.open(fileobj=t.extractfile(member), mode='r:') as nested:
+                for item in nested.getmembers():
+                    p = Path(item.name)
+                    if p.is_absolute() or '..' in p.parts or not (item.isfile() or item.isdir()):
+                        raise ValueError('Unsicherer Dateipfad im Backup / Unsafe archive path.')
+    if set(names) != expected or len(names) != len(expected):
+        raise ValueError('Unvollständiges Backup / Incomplete backup.')
+
 def ensure_network_volumes(d):
     try: d.networks.get(PREFIX)
     except NotFound: d.networks.create(PREFIX, driver="bridge", labels={"io.teslamate-qnap.managed":"true"})
@@ -74,15 +148,27 @@ def deploy(cfg, pull=False):
     if not architecture(): raise RuntimeError(f"Nicht unterstützte Architektur: {platform.machine()}")
     d=client(); ensure_network_volumes(d)
     specs=container_specs(cfg)
+    # Complete ownership checks and downloads before stopping any service.
+    for name, spec in specs.items():
+        owned_container(d, name)
+        if pull:
+            d.images.pull(spec['image'])
+        else:
+            try: d.images.get(spec['image'])
+            except NotFound: d.images.pull(spec['image'])
     order=[f"{PREFIX}-database",f"{PREFIX}-mosquitto",f"{PREFIX}-teslamate",f"{PREFIX}-grafana"]
     for name in order:
         spec=specs[name]
-        if pull: d.images.pull(spec["image"])
-        try: c=d.containers.get(name); c.remove(force=True)
-        except NotFound: pass
+        c = owned_container(d, name)
+        if c:
+            c.stop(timeout=30)
+            c.remove()
         d.containers.run(name=name, detach=True, **spec)
     time.sleep(8)
-    return status()
+    result = status()
+    if any(state != 'running' for state in result.values()):
+        raise RuntimeError('Start fehlgeschlagen / Startup failed: ' + json.dumps(result))
+    return result
 
 def status():
     d=client(); result={}
@@ -119,14 +205,18 @@ def health():
 def index():
     cfg=load_config()
     if request.method=="POST":
+        previous = dict(cfg) if cfg else None
         if not cfg:
             cfg={**DEFAULTS,"database_password":secrets.token_urlsafe(36),"encryption_key":secrets.token_urlsafe(48),"grafana_password":secrets.token_urlsafe(24)}
         for k in ("internal_ip","domain","timezone","teslamate_image","grafana_image","postgres_image","mosquitto_image"):
             if k in request.form: cfg[k]=request.form[k].strip()
-        for k in ("teslamate_port","grafana_port"): cfg[k]=int(request.form[k])
+        for k in ("teslamate_port","grafana_port"): cfg[k]=request.form[k]
         cfg["https"]="https" in request.form
-        save_config(cfg)
         try:
+            validate_config(cfg, previous)
+            if previous:
+                backup(previous)
+            save_config(cfg)
             st=deploy(cfg); flash("Bereitstellung abgeschlossen: "+json.dumps(st),"ok")
         except Exception as e: flash(str(e),"error")
         return redirect(url_for("index"))
@@ -156,8 +246,9 @@ def restore():
     cfg=load_config(); f=request.files.get("backup")
     try:
         if not f or not f.filename.endswith(".tar.gz"): raise RuntimeError("Eine .tar.gz-Sicherung auswählen.")
-        before=backup(cfg); d=client()
         with tarfile.open(fileobj=f.stream,mode="r:gz") as t:
+            validate_backup_archive(t)
+            before=backup(cfg); d=client()
             members={m.name:m for m in t.getmembers()}
             dump=t.extractfile(members["database.dump"]).read()
             db=d.containers.get(f"{PREFIX}-database")
@@ -181,4 +272,4 @@ def restore():
     except Exception as e: flash(f"Restore fehlgeschlagen: {e}","error")
     return redirect(url_for("index"))
 
-app.secret_key=os.environ.get("MANAGER_SESSION_KEY",secrets.token_hex(32))
+app.secret_key=secrets.token_hex(32)

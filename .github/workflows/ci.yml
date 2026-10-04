@@ -17,6 +17,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.13'}
       - run: pip install jsonschema[format] yamllint
+      - run: pip install -r manager/requirements.txt tzdata
       - run: python -m json.tool list.json > /dev/null
       - run: python -c "import json,jsonschema; r=json.load(open('list.json')); s=json.load(open('schema/qnap-template.schema.json')); jsonschema.validate(r,s,format_checker=jsonschema.FormatChecker())"
       - run: docker compose config --quiet

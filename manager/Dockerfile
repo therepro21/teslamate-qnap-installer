@@ -2,7 +2,7 @@ FROM python:3.13-alpine
 WORKDIR /app
 RUN addgroup -S app && adduser -S -G app app
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt tzdata
 COPY app.py ./
 COPY templates/ ./templates/
 RUN mkdir -p /data /backups

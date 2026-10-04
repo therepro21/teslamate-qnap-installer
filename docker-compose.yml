@@ -10,8 +10,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - teslamate-qnap-manager-config:/data
       - teslamate-qnap-backups:/backups
-    environment:
-      MANAGER_SESSION_KEY: "qnap-local-session-change-on-recreate"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8888/health"]
       interval: 30s

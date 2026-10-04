@@ -93,6 +93,10 @@ Keep important backup copies outside the NAS. A volume on the same NAS does not 
 
 ## 10. Never delete these volumes
 
+Maintenance review, 4 October 2026: upstream TeslaMate is at 4.3.0; the `:4` tag deliberately stays within major version 4. The manager now validates input and restore archive paths, rejects foreign-site form submissions, preserves unmanaged containers, downloads images before replacement and backs up existing installations before configuration changes. PostgreSQL major upgrades require a separate migration.
+
+Current limits: CI verifies the manager on both architectures, not a complete deployment on real QNAP hardware. There is no manager login yet; restrict access to a trusted LAN with firewall rules. Downloaded backups do not contain the encryption key, so also securely back up the manager configuration volume for recovery on another NAS. The generated Grafana password is not yet displayed through a secured browser credentials dialog.
+
 `teslamate-qnap-database`, `teslamate-qnap-grafana`, `teslamate-qnap-mosquitto-config`, `teslamate-qnap-mosquitto-data`, `teslamate-qnap-imports`, `teslamate-qnap-manager-config`, `teslamate-qnap-backups`.
 
 Containers can be recreated safely. These volumes hold data, configuration, secrets or backups. If QNAP asks whether associated volumes should also be removed, choose **No** unless you intentionally want permanent data destruction after verifying an external backup.
