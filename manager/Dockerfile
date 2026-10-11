@@ -1,4 +1,4 @@
-FROM python:3.13-alpine
+FROM python:3.14-alpine
 WORKDIR /app
 RUN addgroup -S app && adduser -S -G app app
 COPY requirements.txt .
