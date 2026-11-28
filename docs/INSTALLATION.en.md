@@ -46,6 +46,8 @@ Never expose port 8888—or your replacement manager port—through your router 
 
 ## 5. Open the setup assistant
 
+Open **Container Station → Containers → manager → Logs**. On first start, save the random password beside `Manager login (admin)` in your password manager. Sign in as `admin` with that password. The configuration volume preserves it across container replacements. Keep the container log private. Use a trusted LAN or private HTTPS because HTTP Basic over HTTP sends credentials without encryption.
+
 Open `http://YOUR-QNAP-IP:8888` on your local network, for example `http://192.168.1.20:8888`. If you selected host port 8889 during deployment, use that port instead.
 
 Every configuration field has a small **?** button. Clicking it opens an explanation in both English and German.
@@ -95,7 +97,7 @@ Keep important backup copies outside the NAS. A volume on the same NAS does not 
 
 As of 28 November 2026 the installer selects version 4.5.0 for both TeslaMate and Grafana. The manager upgrades the obsolete default tag :4 when reading saved settings. Custom version tags are preserved. Select future releases explicitly after backing up.
 
-Current limits: CI verifies the manager on both architectures, not a complete deployment on real QNAP hardware. There is no manager login yet; restrict access to a trusted LAN with firewall rules. Downloaded backups do not contain the encryption key, so also securely back up the manager configuration volume for recovery on another NAS. The generated Grafana password is not yet displayed through a secured browser credentials dialog.
+After signing in to the manager, click **Show initial Grafana password** for the original password of Grafana user `admin`. CI tests the manager on both architectures. Full QNAP hardware recovery remains unverified. Securely back up the configuration volume separately for recovery of the encryption key on another NAS.
 
 `teslamate-qnap-database`, `teslamate-qnap-grafana`, `teslamate-qnap-mosquitto-config`, `teslamate-qnap-mosquitto-data`, `teslamate-qnap-imports`, `teslamate-qnap-manager-config`, `teslamate-qnap-backups`.
 

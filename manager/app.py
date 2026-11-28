@@ -13,6 +13,33 @@ app = Flask(__name__)
 app.config.update(MAX_CONTENT_LENGTH=1024 * 1024 * 1024, SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Strict')
 OPERATIONS = threading.Lock()
 
+def manager_password():
+    # A single Gunicorn worker serves all threads. Publish the file atomically.
+    path = DATA / 'manager-password'
+    if not path.exists():
+        import tempfile
+        DATA.mkdir(parents=True, exist_ok=True)
+        with tempfile.NamedTemporaryFile(dir=DATA, mode='w', delete=False) as tmp:
+            tmp.write(secrets.token_urlsafe(32))
+        try:
+            os.link(tmp.name, path)
+        except FileExistsError:
+            pass
+        finally:
+            os.unlink(tmp.name)
+    return path.read_text().strip()
+
+@app.before_request
+def require_login():
+    if request.endpoint == 'health':
+        return
+    auth = request.authorization
+    if auth and auth.type == 'basic' and auth.username == 'admin' and secrets.compare_digest(
+        (auth.password or '').encode(), manager_password().encode()
+    ):
+        return
+    return 'Manager login required', 401, {'WWW-Authenticate': 'Basic realm="TeslaMate QNAP Manager", charset="UTF-8"'}
+
 @app.before_request
 def protect_requests():
     if request.method == 'POST':
@@ -243,8 +270,19 @@ def make_backup():
     except Exception as e: flash(f"Backup fehlgeschlagen: {e}","error")
     return redirect(url_for("index"))
 
+@app.post("/grafana-password")
+def grafana_password():
+    cfg = load_config()
+    if not cfg:
+        abort(404)
+    return cfg['grafana_password'], 200, {'Content-Type': 'text/plain; charset=utf-8',
+                                         'Cache-Control': 'no-store'}
+
 @app.get("/backups/<path:name>")
-def download(name): return send_from_directory(BACKUPS,name,as_attachment=True)
+def download(name):
+    if not re.fullmatch(r'teslamate-qnap-[0-9]{8}T[0-9]{6}Z\.tar\.gz', name):
+        abort(404)
+    return send_from_directory(BACKUPS,name,as_attachment=True)
 
 @app.post("/restore")
 def restore():

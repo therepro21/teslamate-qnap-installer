@@ -1,5 +1,7 @@
 # TeslaMate QNAP Installer
 
+**Manager-Anmeldung** Öffne in Container Station den Manager unter **Container → Protokolle**. Beim ersten Start erscheint `Manager login (admin)` mit einem zufälligen Passwort. Speichere es im Passwortmanager und melde dich im Browser als `admin` an. Das Passwort bleibt im Konfigurationsvolume erhalten. Protokolle vertraulich behandeln. HTTP Basic über HTTP verschlüsselt die Zugangsdaten nicht. Verwende ein vertrauenswürdiges LAN oder einen privaten HTTPS-Zugang.
+
 **Ausführliche Anleitung für Einsteiger:** [Deutsch](docs/INSTALLATION.de.md) · [English](docs/INSTALLATION.en.md)
 
 Die beiden Anleitungen erklären jeden Klick in Container Station, jeden sichtbaren Konfigurationswert, wo er in QNAP zu finden ist und welcher Wert normalerweise richtig ist.
@@ -41,7 +43,7 @@ Das CS3-Template folgt QNAPs dokumentiertem Schema (`templates`, Typ 1, `platfor
 
 Der Manager zeigt interne NAS-IP, TeslaMate-/Grafana-Port, Domain, HTTPS-Status, Zeitzone und alle Image-Tags optisch an. Änderungen jederzeit unter `http://NAS-IP:8888` speichern. Domain und HTTPS sind Ziel-/Dokumentationswerte; TLS und DNS werden bewusst im QNAP-Reverse-Proxy oder einem anderen vorgeschalteten Proxy eingerichtet. Anschließend in TeslaMate unter **Einstellungen → URLs** die Web-App- und Dashboard-URL anpassen.
 
-Secrets (`ENCRYPTION_KEY`, Datenbank- und Grafana-Kennwort) entstehen beim ersten Speichern mit einem kryptografischen Zufallszahlengenerator. Sie werden nur in `teslamate-qnap-manager-config:/data/config.json` mit restriktiven Dateirechten gespeichert, niemals ins Image, Repository oder Backup-Download geschrieben. Das Grafana-Initialkennwort wird absichtlich nicht in der Oberfläche ausgegeben; es kann später in Grafana geändert werden.
+Die Installation erzeugt den Verschlüsselungsschlüssel und die Kennwörter lokal. Nach der Manager-Anmeldung zeigt **Grafana-Initialkennwort anzeigen** das ursprünglich generierte Kennwort für den Grafana-Benutzer `admin`.
 
 ## Updates
 
@@ -94,7 +96,7 @@ Stand 28. November 2026 verwenden TeslaMate und Grafana die feste Version `4.5.0
 
 Der Manager prüft nun Formulartokens und fremde Origins, verhindert parallele Schreibvorgänge, kontrolliert Container-Eigentumslabels vor dem Austausch und lädt alle Images vor dem Stoppen herunter. Konfigurationsänderungen an bestehenden Installationen erzeugen zuerst ein Backup. Portkonflikte zwischen den beiden Anwendungen und ungeeignete Versionsangaben werden abgewiesen; PostgreSQL-Hauptversionswechsel benötigen eine separate Migration. Restore-Archive werden vor Änderungen auf Vollständigkeit und unsichere Dateipfade geprüft.
 
-Die bisherigen Starttests testen den Manager und benannte Volumes auf beiden Architekturen. Sie ersetzen keinen vollständigen QNAP-Hardwaretest des TeslaMate-Stacks oder einen Restore-Test mit echten Nutzdaten. Der Manager besitzt weiterhin keine Benutzeranmeldung; er gehört ausschließlich in ein vertrauenswürdiges, durch QNAP-Firewall/Netzwerkregeln begrenztes LAN. Die Sicherung enthält bislang keinen Verschlüsselungsschlüssel: Für eine Wiederherstellung auf einem anderen NAS muss zusätzlich das Manager-Konfigurationsvolume geschützt gesichert werden. Das automatisch erzeugte Grafana-Kennwort wird derzeit nicht im Browser angezeigt; dafür ist noch ein gesicherter Zugangsdaten-/Anmeldedialog erforderlich.
+Die CI prüft den Manager auf beiden Architekturen. Ein kompletter Wiederherstellungstest auf QNAP-Hardware steht aus. Für einen NAS-Wechsel das Konfigurationsvolume mit dem Verschlüsselungsschlüssel separat geschützt sichern.
 
 - Der Manager muss wegen des Docker-Sockets als root im Container laufen; QNAP verwendet je nach Modell unterschiedliche Socket-Gruppen-IDs.
 - QNAPs UI-Texte variieren nach Firmware und Sprache.

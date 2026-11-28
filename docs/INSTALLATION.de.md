@@ -56,6 +56,8 @@ Wichtig: Port 8888 beziehungsweise dein Ersatzport darf nur im lokalen Netzwerk 
 
 ## 5. Browser-Assistent öffnen
 
+Öffne zuerst **Container Station → Container → Manager → Protokolle**. Kopiere beim ersten Start das zufällige Passwort neben `Manager login (admin)` in deinen Passwortmanager. Der Browser fragt nach Benutzer `admin` und diesem Passwort. Das Konfigurationsvolume bewahrt es bei einem Containerwechsel auf. Das Containerprotokoll enthält Zugangsdaten und muss privat bleiben.
+
 Öffne im lokalen Netzwerk:
 
 `http://DEINE-QNAP-IP:8888`

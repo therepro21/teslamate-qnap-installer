@@ -41,8 +41,13 @@ jobs:
           tags: local/teslamate-qnap-manager:test
       - run: |
           docker run -d --name manager-test -p 8888:8888 local/teslamate-qnap-manager:test
-          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8888/ && exit 0; sleep 2; done
-          docker logs manager-test
+          for i in $(seq 1 30); do
+            if test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8888/)" = 401; then
+              password=$(docker exec manager-test cat /data/manager-password)
+              curl -fsS -u "admin:$password" http://127.0.0.1:8888/ > /dev/null && exit 0
+            fi
+            sleep 2
+          done
           exit 1
       - name: Verify named-volume persistence across container recreate
         run: |
