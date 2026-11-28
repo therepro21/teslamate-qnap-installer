@@ -90,7 +90,7 @@ GitHub Actions validieren JSON gegen das im Repository dokumentierte CS3-Schema,
 
 ## Bekannte Einschränkungen
 
-Stand 4. Oktober 2026: TeslaMate 4.3.0 ist die aktuelle Upstream-Version. Der Major-Tag `:4` bleibt bewusst bestehen; **Backup + Update** lädt die derzeit veröffentlichte Version innerhalb dieser Hauptversion. Flask, Docker SDK und Gunicorn wurden auf 3.1.3, 7.2.0 und 26.2.0 aktualisiert. Dependabot prüft Python-, Docker- und Actions-Abhängigkeiten wöchentlich und erstellt Änderungsvorschläge.
+Stand 28. November 2026 verwenden TeslaMate und Grafana die feste Version `4.5.0`. Der Manager ersetzt den früheren Standard `:4` beim Laden. Eigene Versionen bleiben erhalten. Für spätere Releases den gewünschten Tag nach einem Backup ausdrücklich auswählen.
 
 Der Manager prüft nun Formulartokens und fremde Origins, verhindert parallele Schreibvorgänge, kontrolliert Container-Eigentumslabels vor dem Austausch und lädt alle Images vor dem Stoppen herunter. Konfigurationsänderungen an bestehenden Installationen erzeugen zuerst ein Backup. Portkonflikte zwischen den beiden Anwendungen und ungeeignete Versionsangaben werden abgewiesen; PostgreSQL-Hauptversionswechsel benötigen eine separate Migration. Restore-Archive werden vor Änderungen auf Vollständigkeit und unsichere Dateipfade geprüft.
 

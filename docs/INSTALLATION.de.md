@@ -76,8 +76,8 @@ Neben jedem Feld befindet sich ein kleines **?**. Ein Klick öffnet eine Erklär
 | Grafana-Port | `3000` | vorgegeben | Wenn 3000 belegt ist, z. B. `3001` |
 | Zeitzone | `Europe/Berlin` | Wohnort/Zeitzone | Österreich: `Europe/Vienna`, Schweiz: `Europe/Zurich` |
 | HTTPS am Reverse Proxy | aus | vorhandene Proxy-Konfiguration | Nur einschalten, wenn HTTPS und Proxy bereits funktionieren |
-| TeslaMate-Image | `teslamate/teslamate:4` | vom Installer | Als Einsteiger nicht ändern |
-| Grafana-Image | `teslamate/grafana:4` | vom Installer | Als Einsteiger nicht ändern |
+| TeslaMate-Image | `teslamate/teslamate:4.5.0` | vom Installer | Als Einsteiger nicht ändern |
+| Grafana-Image | `teslamate/grafana:4.5.0` | vom Installer | Als Einsteiger nicht ändern |
 | PostgreSQL-Image | `postgres:18-trixie` | vom Installer | Nur nach geprüfter Upgrade-Anleitung und Backup |
 | Mosquitto-Image | `eclipse-mosquitto:2` | vom Installer | Normalerweise nie ändern |
 

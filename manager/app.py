@@ -55,8 +55,8 @@ VOLUMES = {
     "backups": f"{PREFIX}-backups",
 }
 DEFAULTS = {
-    "teslamate_image": "teslamate/teslamate:4",
-    "grafana_image": "teslamate/grafana:4",
+    "teslamate_image": "teslamate/teslamate:4.5.0",
+    "grafana_image": "teslamate/grafana:4.5.0",
     "postgres_image": "postgres:18-trixie",
     "mosquitto_image": "eclipse-mosquitto:2",
     "teslamate_port": 4000,
@@ -72,7 +72,12 @@ def client():
 
 def load_config():
     if not CONFIG.exists(): return None
-    return json.loads(CONFIG.read_text(encoding="utf-8"))
+    cfg = json.loads(CONFIG.read_text(encoding="utf-8"))
+    for field in ("teslamate_image", "grafana_image"):
+        old_default = DEFAULTS[field].split(":")[0] + ":4"
+        if cfg.get(field) == old_default:
+            cfg[field] = DEFAULTS[field]
+    return cfg
 
 def save_config(cfg):
     DATA.mkdir(parents=True, exist_ok=True)

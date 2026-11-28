@@ -60,8 +60,8 @@ Every configuration field has a small **?** button. Clicking it opens an explana
 | Grafana port | `3000` | installer default | If 3000 is occupied; use e.g. `3001` |
 | Time zone | your IANA zone, e.g. `Europe/Berlin` | your location | Examples: `Europe/London`, `America/New_York` |
 | HTTPS at reverse proxy | off | existing proxy configuration | Enable only after HTTPS and proxy forwarding already work |
-| TeslaMate image | `teslamate/teslamate:4` | installer default | Beginners should not change it |
-| Grafana image | `teslamate/grafana:4` | installer default | Beginners should not change it |
+| TeslaMate image | `teslamate/teslamate:4.5.0` | installer default | Beginners should not change it |
+| Grafana image | `teslamate/grafana:4.5.0` | installer default | Beginners should not change it |
 | PostgreSQL image | `postgres:18-trixie` | installer default | Only with verified upgrade instructions and a backup |
 | Mosquitto image | `eclipse-mosquitto:2` | installer default | Normally never |
 
@@ -93,7 +93,7 @@ Keep important backup copies outside the NAS. A volume on the same NAS does not 
 
 ## 10. Never delete these volumes
 
-Maintenance review, 4 October 2026: upstream TeslaMate is at 4.3.0; the `:4` tag deliberately stays within major version 4. The manager now validates input and restore archive paths, rejects foreign-site form submissions, preserves unmanaged containers, downloads images before replacement and backs up existing installations before configuration changes. PostgreSQL major upgrades require a separate migration.
+As of 28 November 2026 the installer selects version 4.5.0 for both TeslaMate and Grafana. The manager upgrades the obsolete default tag :4 when reading saved settings. Custom version tags are preserved. Select future releases explicitly after backing up.
 
 Current limits: CI verifies the manager on both architectures, not a complete deployment on real QNAP hardware. There is no manager login yet; restrict access to a trusted LAN with firewall rules. Downloaded backups do not contain the encryption key, so also securely back up the manager configuration volume for recovery on another NAS. The generated Grafana password is not yet displayed through a secured browser credentials dialog.
 

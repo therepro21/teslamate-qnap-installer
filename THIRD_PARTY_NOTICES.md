@@ -4,8 +4,8 @@ Dieses Repository enthält ausschließlich den unabhängigen Installer/Manager. 
 
 | Komponente | Verwendung | Lizenz / Quelle |
 |---|---|---|
-| TeslaMate | unverändertes Laufzeit-Image `teslamate/teslamate:4` | AGPL-3.0, https://github.com/teslamate-org/teslamate |
-| TeslaMate Grafana | unverändertes Laufzeit-Image `teslamate/grafana:4` | AGPL-3.0 / Hinweise des Upstreams |
+| TeslaMate | unverändertes Laufzeit-Image `teslamate/teslamate:4.5.0` | AGPL-3.0, https://github.com/teslamate-org/teslamate |
+| TeslaMate Grafana | unverändertes Laufzeit-Image `teslamate/grafana:4.5.0` | AGPL-3.0 / Hinweise des Upstreams |
 | PostgreSQL 18 | Datenbank-Image | PostgreSQL License, https://www.postgresql.org/about/licence/ |
 | Eclipse Mosquitto 2 | MQTT-Broker-Image | EPL-2.0 oder EDL-1.0, https://github.com/eclipse-mosquitto/mosquitto |
 | Python | Manager-Basisimage | PSF License, https://www.python.org/psf/license/ |
